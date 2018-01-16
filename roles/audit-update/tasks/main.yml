@@ -1,0 +1,55 @@
+---
+
+# Audit Update
+
+
+# Audit S3 Bucket Update
+- name:             Audit S3 Bucket Update
+  s3_bucket:
+    name:           "{{ audit_s3_bucket_name }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state:          "present"
+    policy:         "{{ lookup('file','policy.json') }}"
+    # requester_pays: yes
+    # versioning:     yes
+    # tags: 
+    #   tag-key-01:   tag1
+    #   tag-key-02:   tag2
+    #   ...:          tag1
+  register:         this_audit_s3_bucket
+
+
+# Audit S3 Logs Update
+- name: Audit S3 Logs Update
+  s3_logging:
+    name:           "{{ audit_s3_bucket_name }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    target_bucket:  "{{ audit_s3_bucket_name }}"
+    target_prefix:  "{{ audit_s3_target_bucket_log_prefix }}"
+    state:          "present"
+
+
+# Audit CloudTrail Update
+- name:             Audit CloudTrail Update
+  cloudtrail:
+    name:           "trail-{{ audit_s3_bucket_name }}"
+    s3_bucket_name: "{{ audit_s3_bucket_name }}"
+    # region:         ""
+    is_multi_region_trail: true
+    # enable_log_file_validation: true
+    state:           "present"
+    # tags: 
+    #   tag-key-01:   tag1
+    #   tag-key-02:   tag2
+    #   ...:          tag1
+  register:         this_audit_cloudtrail
+
+
+# Audit Config Update
+# - name: Audit Config Update
+
+
+
+...

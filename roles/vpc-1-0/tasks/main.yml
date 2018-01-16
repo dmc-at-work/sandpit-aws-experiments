@@ -1,0 +1,93 @@
+---
+
+# VPC Create
+- name:             VPC Create
+  ec2_vpc_net:
+    name:           "{{ vpc_name }}"
+    cidr_block:     "{{ vpc_cidr_block }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state:          "present"
+  register:         this_vpc
+
+ 
+# VPC ID Set In Variable
+- name:     VPC ID Set In Variable
+  set_fact:
+    vpc_id: "{{ this_vpc.vpc.id }}"
+
+
+# Subnet Public Create
+- name:             Subnet Public Create
+  ec2_vpc_subnet:
+    state:          "present"
+    vpc_id:         "{{ vpc_id }}"
+    cidr:           "{{ public_subnet_1_cidr }}"
+    region:         "{{ aws_region_code }}"
+    az:             "{{ aws_region_code }}a"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    resource_tags:
+      Name:         "{{ environment_type }}-public-a"
+  register:         this_subnet_public
+
+
+# Subnet Public ID Set In Variable
+- name:                Subnet Public ID Set In Variable
+  set_fact:
+    public_subnet_id: "{{ this_subnet_public.subnet.id }}"
+
+
+# IGW Create
+- name:             IGW Create
+  ec2_vpc_igw:
+    state:          "present"
+    vpc_id:         "{{ vpc_id }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+  register:         this_vpc_igw
+
+
+# IGW ID Set In Variable
+- name:     IGW ID Set In Variable
+  set_fact:
+    igw_id: "{{ this_vpc_igw.gateway_id }}"
+
+
+# Route Table Public Subnet Create
+- name: Route Table Public Subnet Create
+  ec2_vpc_route_table:
+    vpc_id:         "{{ vpc_id }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    tags:
+      Name:         "{{ environment_type }}-subnet-public"
+    subnets:
+      -             "{{ public_subnet_id }}"
+    routes:
+      - dest:       "{{ ip_all }}"
+        gateway_id: "{{ igw_id }}"
+
+
+# Subnet Public Security Group SSH Create
+- name:             Subnet Public Security Group SSH Create
+  ec2_group:
+    name:           "{{ environment_type }}-ssh"
+    description:    "{{ environment_name }} VPC Security Group SSH"
+    vpc_id:         "{{ vpc_id }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    rules:
+      - proto:      "tcp"
+      # from_port:    "x"
+      from_port:    "22"
+      # from_port:    "y"
+      to_port:      "22"
+      cidr_ip:      "{{ ip_all }}"
+
+
+...

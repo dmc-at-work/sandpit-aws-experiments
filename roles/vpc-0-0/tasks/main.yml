@@ -1,0 +1,15 @@
+---
+
+# VPC Create
+- name:             VPC Create
+  ec2_vpc_net:
+    name:           "{{ vpc_name }}"
+    cidr_block:     "{{ vpc_cidr_block }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state:          "present"
+  register:         this_vpc
+
+
+...

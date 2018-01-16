@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "",
+      "Principal": {},
+      "Action": "",
+      "Resource": ""
+    },
+    {
+      "Sid": "",
+      "Effect": "",
+      "Principal": {},
+      "Action": "",
+      "Resource": "",
+      "Condition": {}
+    }
+  ]
+}

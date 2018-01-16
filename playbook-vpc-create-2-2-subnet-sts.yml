@@ -1,0 +1,11 @@
+---
+
+- hosts: local
+  vars_files:
+    - group_vars/aws-regions-list.yml
+    - vars/vars-vpc-create-2-2-subnet-sts.yml
+  roles:
+    - vpc-2-2-sts
+
+
+...

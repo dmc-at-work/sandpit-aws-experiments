@@ -1,0 +1,11 @@
+---
+
+- hosts: local
+  vars_files:
+    - group_vars/aws-regions-list.yml
+    - vars/vars-audit-create-sts.yml
+  roles:
+    - audit-create-sts
+
+
+...

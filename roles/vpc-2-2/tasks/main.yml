@@ -1,0 +1,317 @@
+---
+
+# VPC Create
+- name:             VPC Create
+  ec2_vpc_net:
+    name:           "{{ vpc_name }}"
+    cidr_block:     "{{ vpc_cidr_block }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state:          "present"
+  register:         this_vpc
+
+
+# VPC ID Set In Variable
+- name:     VPC ID Set In Variable
+  set_fact:
+    vpc_id: "{{ this_vpc.vpc.id }}"
+
+
+# Subnet Public AZ-a Create
+- name:             Subnet Public AZ-a Create
+  ec2_vpc_subnet:
+    state:          "present"
+    vpc_id:         "{{ vpc_id }}"
+    cidr:           "{{ public_subnet_1_cidr }}"
+    region:         "{{ aws_region_code }}"
+    az:             "{{ aws_region_code }}a"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    resource_tags:
+      Name:         "{{ environment_type }}-public-a"
+  register:         this_subnet_public_aza
+
+
+# Subnet Public AZ-a ID Set In Variable
+- name:                Subnet Public AZ-a ID Set In Variable
+  set_fact:
+    public_subnet_a_id: "{{ this_subnet_public_aza.subnet.id }}"
+
+
+# Subnet Private AZ-a Create
+- name:             Subnet Private AZ-a Create
+  ec2_vpc_subnet:
+    state:          "present"
+    vpc_id:         "{{ vpc_id }}"
+    cidr:           "{{ private_subnet_1_cidr }}"
+    region:         "{{ aws_region_code }}"
+    az:             "{{ aws_region_code }}a"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    resource_tags:
+      Name:         "{{ environment_type }}-private-a"
+  register:         this_subnet_private_aza
+
+
+# Subnet Private AZ-a ID Set In Variable
+- name:                  Subnet Private AZ-a ID Set In Variable
+  set_fact:
+    private_subnet_a_id: "{{ this_subnet_private_aza.subnet.id }}"
+
+
+# Subnet Public AZ-b Create
+- name:             Subnet Public AZ-b Create
+  ec2_vpc_subnet:
+    state:          "present"
+    vpc_id:         "{{ vpc_id }}"
+    cidr:           "{{ public_subnet_2_cidr }}"
+    region:         "{{ aws_region_code }}"
+    az:             "{{ aws_region_code }}b"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    resource_tags:
+      Name:         "{{ environment_type }}-public-b"
+  register:         this_subnet_public_azb
+
+
+# Subnet Public AZ-b ID Set In Variable
+- name:                Subnet Public AZ-b ID Set In Variable
+  set_fact:
+    public_subnet_b_id: "{{ this_subnet_public_azb.subnet.id }}"
+
+
+# Subnet Private AZ-b Create
+- name:             Subnet Private AZ-b Create
+  ec2_vpc_subnet:
+    state:          "present"
+    vpc_id:         "{{ vpc_id }}"
+    cidr:           "{{ private_subnet_2_cidr }}"
+    region:         "{{ aws_region_code }}"
+    az:             "{{ aws_region_code }}b"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    resource_tags:
+      Name:         "{{ environment_type }}-private-b"
+  register:         this_subnet_private_azb
+
+
+# Subnet Private AZ-b ID Set In Variable
+- name:                  Subnet Private AZ-b ID Set In Variable
+  set_fact:
+    private_subnet_b_id: "{{ this_subnet_private_azb.subnet.id }}"
+
+
+# IGW Create
+- name:             IGW Create
+  ec2_vpc_igw:
+    state:          "present"
+    vpc_id:         "{{ vpc_id }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+  register:         this_vpc_igw
+
+
+# IGW ID Set In Variable
+- name:     IGW ID Set In Variable
+  set_fact:
+    igw_id: "{{ this_vpc_igw.gateway_id }}"
+
+
+# AWS CLI Setup
+- name: AWS CLI Setup (1/3)
+  shell: >
+    aws configure set aws_access_key_id "{{ aws_access_key }}"
+
+- name: AWS CLI Setup (2/3)
+  shell: >
+    aws configure set aws_secret_access_key "{{ aws_secret_key }}"
+
+- name: AWS CLI Setup (3/3)
+  shell: >
+    aws configure set region {{ aws_region_code }}
+
+
+# Elastic IP AZ-a Create
+- name: Elastic IP AZ-a Create
+  shell: >
+    aws ec2 allocate-address \
+    --domain vpc \
+    --query AllocationId | tr -d '"'
+  register: eip_aza
+
+# Debug
+- debug: var=eip_aza
+
+# EIP Set In Variable
+- name:              EIP Set In Variable
+  set_fact:
+    this_elastic_ip_aza: "{{ eip_aza.stdout }}"
+
+
+# Elastic IP AZ-b Create
+- name: Elastic IP AZ-b Create
+  shell: >
+    aws ec2 allocate-address \
+    --domain vpc \
+    --query AllocationId | tr -d '"'
+  register: eip_azb
+
+# Debug
+- debug: var=eip_azb
+
+# EIP AZ-b Set In Variable
+- name:                  EIP AZ-b Set In Variable
+  set_fact:
+    this_elastic_ip_azb: "{{ eip_azb.stdout }}"
+
+
+# NAT Gateway AZ-a Create
+- name: NAT Gateway AZ-a Create
+  shell: >
+    aws ec2 create-nat-gateway \
+    --subnet-id {{ public_subnet_a_id }} \
+    --allocation-id {{ this_elastic_ip_aza }} \
+    --query NatGateway.NatGatewayId | tr -d '"'
+  register: this_nat_gateway_aza
+
+
+# NAT Gateway AZ-a Set In Variable
+- name:             NAT Gateway AZ-a Set In Variable
+  set_fact:
+    nat_gateway_aza_id: "{{ this_nat_gateway_aza.stdout }}"
+
+
+# Pause
+- pause: seconds=10
+
+
+# NAT Gateway AZ-b Create
+- name: NAT Gateway AZ-b Create
+  shell: >
+    aws ec2 create-nat-gateway \
+    --subnet-id {{ public_subnet_b_id }} \
+    --allocation-id {{ this_elastic_ip_azb }} \
+    --query NatGateway.NatGatewayId | tr -d '"'
+  register: this_nat_gateway_azb
+
+
+# NAT Gateway AZ-b Set In Variable
+- name:             NAT Gateway AZ-b Set In Variable
+  set_fact:
+    nat_gateway_azb_id: "{{ this_nat_gateway_azb.stdout }}"
+
+
+# Pause
+- pause: seconds=10
+
+
+# Route Table Public Subnet AZ-a Create
+- name:                Route Table Public Subnet AZ-a Create
+  ec2_vpc_route_table:
+    vpc_id:            "{{ vpc_id }}"
+    region:            "{{ aws_region_code }}"
+    aws_access_key:    "{{ aws_access_key }}"
+    aws_secret_key:    "{{ aws_secret_key }}"
+    tags:
+      Name:            "{{ environment_type }}-subnet-public-a"
+    subnets:
+      -                "{{ public_subnet_a_id }}"
+    routes:
+      - dest:          "{{ ip_all }}"
+        gateway_id:    "{{ igw_id }}"
+
+
+# Route Table Private Subnet AZ-a Create
+- name:                Route Table Private Subnet AZ-a Create
+  ec2_vpc_route_table:
+    vpc_id:            "{{ vpc_id }}"
+    region:            "{{ aws_region_code }}"
+    aws_access_key:    "{{ aws_access_key }}"
+    aws_secret_key:    "{{ aws_secret_key }}"
+    tags:
+      Name:            "{{ environment_type }}-subnet-private-a"
+    subnets:
+      -                "{{ public_subnet_a_id }}"
+    routes:
+      - dest:          "{{ ip_all }}"
+        gateway_id:    "{{ nat_gateway_aza_id }}"
+
+
+# Route Table Public Subnet AZ-b Create
+- name:                Route Table Public Subnet AZ-b Create
+  ec2_vpc_route_table:
+    vpc_id:            "{{ vpc_id }}"
+    region:            "{{ aws_region_code }}"
+    aws_access_key:    "{{ aws_access_key }}"
+    aws_secret_key:    "{{ aws_secret_key }}"
+    tags:
+      Name:            "{{ environment_name }}-subnet-public-b"
+    subnets:
+      -                "{{ public_subnet_b_id }}"
+    routes:
+      - dest:          "{{ ip_all }}"
+        gateway_id:    "{{ igw_id }}"
+
+
+# Route Table Private Subnet AZ-b Create
+- name:                Route Table Private Subnet AZ-b Create
+  ec2_vpc_route_table:
+    vpc_id:            "{{ vpc_id }}"
+    region:            "{{ aws_region_code }}"
+    aws_access_key:    "{{ aws_access_key }}"
+    aws_secret_key:    "{{ aws_secret_key }}"
+    tags:
+      Name:            "{{ environment_type }}-subnet-private-b"
+    subnets:
+      -                "{{ public_subnet_b_id }}"
+    routes:
+      - dest:          "{{ ip_all }}"
+        gateway_id:    "{{ nat_gateway_azb_id }}"
+
+
+# Subnet Public Security Group SSH Create
+- name:             Subnet Public Security Group SSH Create
+  ec2_group:
+    name:           "{{ environment_type }}-public-ssh"
+    description:    "{{ environment_name }} VPC Public Security Group SSH"
+    vpc_id:         "{{ vpc_id }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    rules:
+      - proto:      "tcp"
+      # from_port:    "x"
+      from_port:    "22"
+      # from_port:    "y"
+      to_port:      "22"
+      cidr_ip:      "{{ ip_all }}"
+  register:         this_subnet_public_sg
+
+
+# Subnet Public Security Group SSH Set In Variable
+- name:                       Subnet Public Security Group SSH Set In Variable
+  set_fact:
+    this_subnet_public_sg_id: "{{ this_subnet_public_sg.group_id }}"
+
+
+# Private Subnet Security Group SSH Create
+- name: Private Subnet Security Group SSH Create
+  ec2_group:
+    name:           "{{ environment_type }}-private-ssh"
+    description:    "{{ environment_name }} VPC Private Security Group SSH"
+    vpc_id:         "{{ vpc_id }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    rules:
+      - proto:      "tcp"
+      # from_port:    "x"
+      from_port:    "22"
+      # from_port:    "y"
+      to_port:      "22"
+      group_id:     "{{ this_subnet_public_sg_id }}"
+
+
+...

@@ -1,0 +1,38 @@
+---
+
+# Audit Delete
+
+
+# Audit CloudTrail Delete
+- name:       Audit CloudTrail Delete
+  cloudtrail:
+    name:     "trail-{{ audit_s3_bucket_name }}"
+    state:    "absent"
+
+
+# Audit S3 Lifecycle Logs Delete
+# - name: 
+#   s3_lifecycle:
+#     name:       "{{ audit_s3_bucket_name }}"
+#     prefix:     "{{ audit_s3_target_bucket_log_prefix }}"
+#     status:     "disabled"
+#     state:      "present"
+    
+
+# Audit S3 Logs Delete
+# - name:         Audit S3 Logs Delete
+#   s3_lifecycle:
+#     name:       "{{ audit_s3_bucket_name }}"
+#     prefix:     "{{ audit_s3_target_bucket_log_prefix }}"
+#     state:      "absent"
+
+
+# Audit S3 Bucket Delete
+- name:      Audit S3 Bucket Delete
+  s3_bucket:
+    name:    "{{ audit_s3_bucket_name }}"
+    state:   "absent"
+    force:   "yes"
+
+
+...

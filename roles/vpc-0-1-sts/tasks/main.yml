@@ -1,0 +1,73 @@
+---
+
+# STS Role Assume
+- name:                STS Role Assume
+  sts_assume_role:
+    aws_access_key:    "{{ aws_access_key }}"
+    aws_secret_key:    "{{ aws_secret_key }}"
+    role_arn:          "{{ aws_iam_role_sts_arn }}"
+    role_session_name: "{{ aws_iam_role_sts_name }}"
+  register:            this_assumed_role
+
+
+# VPC Create
+- name:             VPC Create
+  ec2_vpc_net:
+    name:           "{{ vpc_name }}"
+    cidr_block:     "{{ vpc_cidr_block }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ this_assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ this_assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ this_assumed_role.sts_creds.session_token }}"
+    state:          "present"
+  register:         this_vpc
+
+ 
+# VPC ID Set In Variable
+- name:     VPC ID Set In Variable
+  set_fact:
+    vpc_id: "{{ this_vpc.vpc.id }}"
+
+
+# Subnet Private Create
+- name:             Subnet Private Create
+  ec2_vpc_subnet:
+    state:          "present"
+    vpc_id:         "{{ vpc_id }}"
+    cidr:           "{{ private_subnet_1_cidr }}"
+    region:         "{{ aws_region_code }}"
+    az:             "{{ aws_region_code }}b"
+    aws_access_key: "{{ this_assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ this_assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ this_assumed_role.sts_creds.session_token }}"
+    resource_tags:
+      Name:         "{{ environment_type }}-private-b"
+  register:         this_subnet_private
+
+
+# Subnet Private ID Set In Variable
+- name:                Subnet Private ID Set In Variable
+  set_fact:
+    private_subnet_id: "{{ this_subnet_private.subnet.id }}"
+
+
+# Subnet Private Security Group SSH Create
+- name:             Subnet Private Security Group SSH Create
+  ec2_group:
+    name:           "{{ environment_type }}-ssh"
+    description:    "{{ environment_name }} VPC Security Group SSH"
+    vpc_id:         "{{ vpc_id }}"
+    region:         "{{ aws_region_code }}"
+    aws_access_key: "{{ this_assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ this_assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ this_assumed_role.sts_creds.session_token }}"
+    rules:
+      - proto:      "tcp"
+      # from_port:    "x"
+      from_port:    "22"
+      # from_port:    "y"
+      to_port:      "22"
+      cidr_ip:      "{{ ip_local_cidr }}"
+
+
+...

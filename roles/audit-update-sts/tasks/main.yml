@@ -1,0 +1,70 @@
+---
+
+# Audit Update
+
+
+# STS Role Assume
+- name:                STS Role Assume
+  sts_assume_role:
+    aws_access_key:    "{{ aws_access_key }}"
+    aws_secret_key:    "{{ aws_secret_key }}"
+    role_arn:          "{{ aws_iam_role_sts_arn }}"
+    role_session_name: "{{ aws_iam_role_sts_name }}"
+  register:            this_assumed_role
+ 
+
+# Audit S3 Bucket Update
+- name:             Audit S3 Bucket Update
+  s3_bucket:
+    name:           "{{ audit_s3_bucket_name }}"
+    aws_access_key: "{{ this_assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ this_assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ this_assumed_role.sts_creds.session_token }}"
+    state:          "present"
+    policy:         "{{ lookup('file','policy.json') }}"
+    # requester_pays: yes
+    # versioning:     yes
+    # tags: 
+    #   tag-key-01:   tag1
+    #   tag-key-02:   tag2
+    #   ...:          tag1
+  register:         this_audit_s3_bucket
+
+
+# Audit S3 Logs Update
+- name: Audit S3 Logs Update
+  s3_logging:
+    name:           "{{ audit_s3_bucket_name }}"
+    aws_access_key: "{{ this_assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ this_assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ this_assumed_role.sts_creds.session_token }}"
+    target_bucket:  "{{ audit_s3_bucket_name }}"
+    target_prefix:  "{{ audit_s3_target_bucket_log_prefix }}"
+    state:          "present"
+
+
+# Audit CloudTrail Update
+- name:             Audit CloudTrail Update
+  cloudtrail:
+    name:           "trail-{{ audit_s3_bucket_name }}"
+    aws_access_key: "{{ this_assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ this_assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ this_assumed_role.sts_creds.session_token }}"
+    s3_bucket_name: "{{ audit_s3_bucket_name }}"
+    # region:         ""
+    is_multi_region_trail: true
+    # enable_log_file_validation: true
+    state:           "present"
+    # tags: 
+    #   tag-key-01:   tag1
+    #   tag-key-02:   tag2
+    #   ...:          tag1
+  register:         this_audit_cloudtrail
+
+
+# Audit Config Update
+# - name: Audit Config Update
+
+
+
+...

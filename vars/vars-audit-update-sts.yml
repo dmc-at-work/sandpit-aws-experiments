@@ -1,0 +1,123 @@
+---
+
+###################
+### AWS Credentials
+###################
+
+# AWS Access Key Credentials
+# account:group-role:account
+aws_access_key: ""
+aws_secret_key: ""
+
+# Profiles
+# ...
+
+# STS Role
+aws_iam_role_sts_arn:  ""
+aws_iam_role_sts_name: ""
+
+
+###############
+### AWS Regions
+###############
+
+# aws_region_code: us-east-1
+# aws_region_name: US East (N. Virginia)
+
+# aws_region_code: us-east-2
+# aws_region_name: US East (Ohio)
+
+# aws_region_code: us-west-1
+# aws_region_name: US West (N. California)
+
+# aws_region_code: us-west-2
+# aws_region_name: US West (Oregon)
+
+# aws_region_code: ca-central-1
+# aws_region_name: Canada (Central)
+
+# aws_region_code: eu-west-1
+# aws_region_name: EU (Ireland)
+
+# aws_region_code: eu-central-1
+# aws_region_name: EU (Frankfurt)
+
+# aws_region_code: eu-west-2
+# aws_region_name: EU (London)
+
+# aws_region_code: eu-west-3
+# aws_region_name: EU (Paris)
+
+# aws_region_code: ap-northeast-1
+# aws_region_name: Asia Pacific (Tokyo)
+
+# aws_region_code: ap-northeast-2
+# aws_region_name: Asia Pacific (Seoul)
+
+# aws_region_code: ap-southeast-1
+# aws_region_name: Asia Pacific (Singapore)
+
+# aws_region_code: ap-southeast-2
+# aws_region_name: Asia Pacific (Sydney)
+
+# aws_region_code: ap-south-1
+# aws_region_name: Asia Pacific (Mumbai)
+
+# aws_region_code: sa-east-1
+# aws_region_name: South America (São Paulo)
+
+
+###################
+### VPC Information
+###################
+
+# TBD
+vpc_name:       "vpc-tbd"
+vpc_cidr_block: "x.x.x.x/x"
+
+
+###########
+### Subnets
+###########
+
+# Public
+#
+#
+# ...
+
+# Private
+# 
+# 
+# ...
+
+
+########
+### Meta
+########
+
+# IP Ranges All
+ip_all: "0.0.0.0/0"
+
+# Environment Name
+environment_name: "TBD"
+
+# Environment Type
+environment_type: "tbd"
+
+# IP Range VPC Local
+ip_local_cidr: "x.x.x.x/x"
+
+# Audit S3 Bucket Name
+audit_s3_bucket_name: ""
+
+# Audit S3 Target Bucket Logs Prefix Name
+audit_s3_target_bucket_log_prefix: "logs/"
+
+# Audit CloudTrail Name
+audit_cloudtrail_name: ""
+
+# Audit Config Name
+audit_config_name: ""
+
+
+...

@@ -1,0 +1,11 @@
+---
+
+- hosts: local
+  vars_files:
+    - group_vars/aws-regions-list.yml
+    - vars/vars-audit-delete-sts.yml
+  roles:
+    - audit-delete-sts
+
+
+...
