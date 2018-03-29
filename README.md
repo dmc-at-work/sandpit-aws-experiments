@@ -13,7 +13,7 @@
 ##### Deletion
 * From another repo developed separately
 ##### How
-* ```From another repo developed separately```
+* From another repo developed separately
 
 <br />
 
